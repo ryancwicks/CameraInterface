@@ -18,9 +18,11 @@ CameraBase::CameraBase () :
 }
 
 bool CameraBase::Initialize ( 
-       std::function < void ( std::unique_ptr < PixelType > ) > callback ) {
+       std::function < void ( std::unique_ptr < PixelType > ) > callback,
+       std::function < void ( std::string ) error_callback ) {
   if ( m_is_initialized ) return true;
-  m_callback = callback
+  m_callback = callback;
+  m_error_callback = error_callback;
   if ( !handleInitialize ( error_message ) ) return false;
   m_is_initialized = true;  
   return true;
@@ -76,9 +78,6 @@ bool CameraBase::IsInitialized ( std::string & error_message ) {
   error_message = uninitialized_camera_error_message;
   return false;
 }
-
-
-
 
 } //CameraInterface
 } //rw

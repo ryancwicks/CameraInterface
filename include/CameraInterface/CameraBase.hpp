@@ -56,7 +56,8 @@ class CameraBase
    * @param error_message returned by reference.
    */
   bool Initialize ( 
-       std::function < void ( std::unique_ptr < PixelType > ) > callback );
+       std::function < void ( std::unique_ptr < PixelType > ) > callback,
+       std::function < void ( std::string error_message ) >  error_callback );
 
 
   /**
@@ -102,23 +103,23 @@ class CameraBase
   CameraBase & operator= (const CameraBase & other) = delete;
 
   // See SetExposure
-  bool handleSetExposure ( double exposure, std::string & error_message ) = 0;
+  virtual bool handleSetExposure ( double exposure, std::string & error_message ) = 0;
 
   // See SetRate
-  bool handleSetRate ( double frame_rate, std::string & error_message ) = 0;
+  virtual bool handleSetRate ( double frame_rate, std::string & error_message ) = 0;
 
   // See GrabImage
-  bool handleGrabImage ( std::unique_ptr < CapturedImage < PixelType > > & image, 
+  virtual bool handleGrabImage ( std::unique_ptr < CapturedImage < PixelType > > & image, 
                    std::string & error_message ) = 0;
 
   // See Initialize
-  bool handleInitialize ( std::string & error_message ) = 0;
+  virtual bool handleInitialize ( std::string & error_message ) = 0;
 
   ///< callback function for returning images when run in a loop.
   std::function < void ( std::unique_ptr < PixelType > ) > m_callback; 
 
   ///< callback function when error is raised in capture loop.
-  std::function < void ( std::string & ) > m_error_callback;
+  std::function < void ( std::string ) > m_error_callback;
 
   ///< was the camera initialized
   bool m_is_initialized;
