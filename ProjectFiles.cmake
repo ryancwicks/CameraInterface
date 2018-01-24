@@ -5,10 +5,12 @@
 # Set project source files.
 set(SRC
   "${SRC_PATH}/CameraBase.cpp"
+  "${SRC_PATH}/CapturedImage.cpp"
 )
 
 set (HEADER
-    "${INCLUDE_PATH}/CameraInterface/CameraBase.hpp"
+  "${INCLUDE_PATH}/CameraInterface/CameraBase.hpp"
+  "${INCLUDE_PATH}/CameraInterface/CapturedImage.hpp"
 )
 
 # Set project main file.
@@ -19,5 +21,8 @@ set(MAIN_SRC
 # Set project test source files.
 set(TEST_SRC
   "${TEST_SRC_PATH}/testCameraBase.cpp"
+  "${TEST_SRC_PATH}/testCapturedImage.cpp"
+  "${TEST_SRC_PATH}/TestCamera.cpp"
+
 )
 
