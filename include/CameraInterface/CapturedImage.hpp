@@ -31,7 +31,7 @@ SOFTWARE.
 
 namespace rw
 {
-namespace CameraInterface
+namespace camera
 {
 
 /**

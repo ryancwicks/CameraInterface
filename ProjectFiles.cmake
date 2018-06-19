@@ -4,7 +4,6 @@
 
 # Set project source files.
 set(SRC
-  "${SRC_PATH}/CameraBase.cpp"
   "${SRC_PATH}/CapturedImage.cpp"
 )
 
@@ -22,7 +21,8 @@ set(MAIN_SRC
 set(TEST_SRC
   "${TEST_SRC_PATH}/testCameraBase.cpp"
   "${TEST_SRC_PATH}/testCapturedImage.cpp"
-  "${TEST_SRC_PATH}/TestCamera.cpp"
-
 )
 
+set(TEST_SRC_HEADERS
+  "${TEST_SRC_PATH}/TestCamera.hpp"
+)

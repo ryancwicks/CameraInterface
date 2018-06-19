@@ -35,7 +35,7 @@ SOFTWARE.
 
 namespace rw
 {
-namespace CameraInterface
+namespace camera
 {
 
 /**
@@ -55,10 +55,19 @@ class CameraBase
    * @param callback that is called when image is captured.
    * @param error_message returned by reference.
    */
-  bool Initialize ( 
+  bool initialize ( 
        std::function < void ( std::unique_ptr < PixelType > ) > callback,
        std::function < void ( std::string error_message ) >  error_callback, 
        std::string & error_message );
+
+  /**
+   * @brief Set the camera gain in percent.
+   * @param gain in percent
+   * @param error_message returned by reference.
+   * @return bool was the set successful
+   */
+  bool setGain ( int exposure, std::string & error_message );
+
 
   /**
    * @brief Set the camera exposure time in seconds.
@@ -66,7 +75,7 @@ class CameraBase
    * @param error_message returned by reference.
    * @return bool was the set successful
    */
-  bool SetExposure ( double exposure, std::string & error_message );
+  bool setExposure ( double exposure, std::string & error_message );
 
   /**
    * @brief Set the camera rate time in seconds.
@@ -74,7 +83,7 @@ class CameraBase
    * @param error_message returned by reference.
    * @return bool was the set successful
    */
-  bool SetRate ( double frame_rate, std::string & error_message );
+  bool setRate ( double frame_rate, std::string & error_message );
 
   /**
    * @brief Grabs a single image. Blocking, runs in the current thread.
@@ -82,25 +91,28 @@ class CameraBase
    * @param error message returned by reference
    * @return bool was the image read successful
    */
-  bool GrabImage ( std::unique_ptr < CapturedImage < PixelType > > & image, 
+  bool grabImage ( std::unique_ptr < CapturedImage < PixelType > > & image, 
                    std::string & error_message );
 
   /**
    * @brief Capture a continuous series of images in a loop in it's own thread. 
    *        Return by a callback. Runs in separate thread. non-blocking.
    */
-  bool StartCapture ( std::string & error_message );
+  bool startCapture ( std::string & error_message );
 
   /**
    * @brief Stop the capture loop. 
    */
-  bool StopCapture ( std::string & error_message );
+  bool stopCapture ( std::string & error_message );
 
  private:
 
   // Do not want the camera to be copyable.
   CameraBase ( const CameraBase & ) = delete;
   CameraBase & operator= (const CameraBase & other) = delete;
+
+  // See SetGain
+  virtual bool handleSetGain ( int gain, std::string & error_message ) = 0;
 
   // See SetExposure
   virtual bool handleSetExposure ( double exposure, std::string & error_message ) = 0;
@@ -136,7 +148,7 @@ class CameraBase
    * @param error_message
    * @return bool is the camera running
    */
-  bool IsNotRunning ( std::string & error_message );
+  bool isNotRunning ( std::string & error_message );
   
 /**
    * @brief These are helper functions to check if the camera is initialized.
@@ -144,12 +156,12 @@ class CameraBase
    * @param error_message
    * @return bool is the camera initialized.
    */
-  bool IsInitialized ( std::string & error_message );
+  bool isInitialized ( std::string & error_message );
 
   /**
    * @brief Grabs images in a loop, runs with m_is_running is set.
    */
-  void CaptureLoop (); 
+  void captureLoop (); 
 
   const std::string uninitialized_camera_error_message; 
   const std::string camera_running_error_message;
@@ -172,7 +184,7 @@ CameraBase<PixelType>::CameraBase () :
     m_is_running ( false ) {};
 
 template <typename PixelType>
-bool CameraBase<PixelType>::Initialize ( 
+bool CameraBase<PixelType>::initialize ( 
        std::function < void ( std::unique_ptr < PixelType > ) > callback,
        std::function < void ( std::string error_message ) >  error_callback, 
        std::string & error_message ) {
@@ -185,30 +197,38 @@ bool CameraBase<PixelType>::Initialize (
 }
 
 template <typename PixelType>
-bool CameraBase<PixelType>::GrabImage ( std::unique_ptr < CapturedImage < PixelType > > & image, 
+bool CameraBase<PixelType>::grabImage ( std::unique_ptr < CapturedImage < PixelType > > & image, 
                  std::string & error_message ){
-  if ( !IsInitialized ( error_message ) ) return false;
-  if ( !IsNotRunning ( error_message ) ) return false;
+  if ( !isInitialized ( error_message ) ) return false;
+  if ( !isNotRunning ( error_message ) ) return false;
   return handleGrabImage ( image, error_message );
 }
 
 template <typename PixelType>
-bool CameraBase<PixelType>::SetExposure ( double exposure, std::string & error_message ) {
-  if ( !IsInitialized ( error_message ) ) return false;
-  if ( !IsNotRunning ( error_message ) ) return false;
+bool CameraBase<PixelType>::setGain ( int gain, std::string & error_message ) {
+  if ( !isInitialized ( error_message ) ) return false;
+  if ( !isNotRunning ( error_message ) ) return false;
+  return handleSetGain ( gain, error_message );
+}
+
+
+template <typename PixelType>
+bool CameraBase<PixelType>::setExposure ( double exposure, std::string & error_message ) {
+  if ( !isInitialized ( error_message ) ) return false;
+  if ( !isNotRunning ( error_message ) ) return false;
   return handleSetExposure ( exposure, error_message );
 }
 
 template <typename PixelType>
-bool CameraBase<PixelType>::SetRate ( double frame_rate, std::string & error_message ) {
-  if ( !IsInitialized ( error_message ) ) return false;
-  if ( !IsNotRunning ( error_message ) ) return false;
+bool CameraBase<PixelType>::setRate ( double frame_rate, std::string & error_message ) {
+  if ( !isInitialized ( error_message ) ) return false;
+  if ( !isNotRunning ( error_message ) ) return false;
   return handleSetRate ( frame_rate, error_message );
 }
 
 template <typename PixelType>
-bool CameraBase<PixelType>::StartCapture ( std::string & error_message ) {
-  if ( !IsInitialized ( error_message ) ) return false;
+bool CameraBase<PixelType>::startCapture ( std::string & error_message ) {
+  if ( !isInitialized ( error_message ) ) return false;
   if ( m_is_running ) return true; 
   
   m_is_running = true;
@@ -216,17 +236,16 @@ bool CameraBase<PixelType>::StartCapture ( std::string & error_message ) {
 }
 
 template <typename PixelType>
-bool CameraBase<PixelType>::StopCapture ( std::string & error_message ) {
-  if ( !IsInitialized ( error_message ) ) return false;
+bool CameraBase<PixelType>::stopCapture ( std::string & error_message ) {
+  if ( !isInitialized ( error_message ) ) return false;
   if ( m_is_running ) return true;
 
   m_is_running = false;
-  
   m_future.get(); //wait for thread to exit (blocking);
 }
 
 template <typename PixelType>
-bool CameraBase<PixelType>::IsNotRunning ( std::string & error_message ) {
+bool CameraBase<PixelType>::isNotRunning ( std::string & error_message ) {
   if ( !m_is_running ) return true;
   
   error_message = camera_running_error_message;
@@ -234,7 +253,7 @@ bool CameraBase<PixelType>::IsNotRunning ( std::string & error_message ) {
 }
 
 template <typename PixelType>
-bool CameraBase<PixelType>::IsInitialized ( std::string & error_message ) {
+bool CameraBase<PixelType>::isInitialized ( std::string & error_message ) {
   if (m_is_initialized) return true;
 
   error_message = uninitialized_camera_error_message;
@@ -242,7 +261,7 @@ bool CameraBase<PixelType>::IsInitialized ( std::string & error_message ) {
 }
 
 template <typename PixelType>
-void CameraBase<PixelType>::CaptureLoop () {
+void CameraBase<PixelType>::captureLoop () {
   while ( m_is_running ) {
     std::unique_ptr < CapturedImage <PixelType> > image;
     std::string error_message;
