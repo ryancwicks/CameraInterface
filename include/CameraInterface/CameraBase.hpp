@@ -53,6 +53,7 @@ class CameraBase
   /**
    * @brief Initialize the camera.
    * @param callback that is called when image is captured.
+   * @param callback that is called when an error occurs.
    * @param error_message returned by reference.
    */
   bool initialize ( 
