@@ -30,6 +30,7 @@ SOFTWARE.
 #include <string>
 #include <utility>
 #include <vector>
+#include <chrono>
 
 namespace rw {
 namespace camera {
@@ -98,6 +99,14 @@ public:
     return std::make_pair(m_width, m_height);
   };
 
+  /**
+   * @brief Get capture time.
+   * @return std::chrono::high_resolution_clock::time_point of capture/data set.
+   */
+  std::chrono::high_resolution_clock::time_point getTime() const {
+    return m_time;
+  };
+
 private:
   static const std::string c_range_error_message;
   CapturedImage() = delete;
@@ -108,6 +117,15 @@ private:
   ///< width and height for image
   uint32_t m_width;
   uint32_t m_height;
+
+  ///< The capture time
+  std::chrono::high_resolution_clock::time_point m_time;
+  /**
+   * @brief Set the capture time to when the data is set.
+   */
+  void setToCurrentTime() {
+    m_time = std::chrono::high_resolution_clock::now();
+  };
 };
 
 template <typename PixelType>
@@ -120,6 +138,7 @@ void CapturedImage<PixelType>::setData(const void *array,
   if (array_size != m_width * m_height * sizeOfData()) {
     throw std::runtime_error(c_range_error_message);
   }
+  this->setToCurrentTime();
   m_image.clear();
   const PixelType *array_pixel_type =
       reinterpret_cast<const PixelType *>(array);
@@ -133,6 +152,7 @@ void CapturedImage<PixelType>::setData(const PixelType *array,
   if (array_size != m_width * m_height) {
     throw std::runtime_error(c_range_error_message);
   }
+  this->setToCurrentTime();
   m_image.clear();
   m_image = std::vector<PixelType>(array, array + m_width * m_height);
 }
@@ -142,6 +162,7 @@ void CapturedImage<PixelType>::setData(const std::string &buffer) {
   if (buffer.size() != m_width * m_height * sizeOfData()) {
     throw std::runtime_error(c_range_error_message);
   }
+  this->setToCurrentTime();
   m_image.clear();
   const PixelType *array_pixel_type =
       reinterpret_cast<const PixelType *>(buffer.data());
@@ -154,6 +175,7 @@ void CapturedImage<PixelType>::setData(const std::vector<PixelType> &buffer) {
   if (buffer.size() != m_width * m_height) {
     throw std::runtime_error(c_range_error_message);
   }
+  this->setToCurrentTime();
   m_image.clear();
   std::copy(buffer.begin(), buffer.end(), m_image.begin());
 }
